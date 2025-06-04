@@ -1,6 +1,6 @@
 import unittest
 
-from src.parser import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_images, split_nodes_links
+from src.parser import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_images, split_nodes_links, text_to_textnodes
 from src.textnode import TextNode, TextType
 
 def AssertEqualLists(testcase, list1, list2):
@@ -181,6 +181,65 @@ class TestSplitNodesImagesLinks(unittest.TestCase):
         ]
 
         AssertEqualLists(self, result, expected)
+
+class TestTextToTextnodes(unittest.TestCase):
+    def test_text_to_textnodes_textstyles(self):
+        text = "This is a **bold** text with _italic_ and `code`."
+        expected = [
+            TextNode("This is a ", TextType.TEXT),
+            TextNode("bold", TextType.BOLD),
+            TextNode(" text with ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("code", TextType.CODE),
+            TextNode(".", TextType.TEXT)
+        ]
+        
+        result = text_to_textnodes(text)
+
+        AssertEqualLists(self, result, expected)
+    
+    def test_text_to_textnodes_full(self):
+        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        expected = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
+
+        result = text_to_textnodes(text)
+
+        AssertEqualLists(self, result, expected)
+    
+    def test_text_to_textnodes_nothing(self):
+        text = "Some plain old text."
+        expected = [
+            TextNode("Some plain old text.", TextType.TEXT)
+        ]
+
+        result = text_to_textnodes(text)
+
+        AssertEqualLists(self, result, expected)
+    
+    def test_text_to_textnodes_empty(self):
+        text = ""
+        expected = []
+
+        result = text_to_textnodes(text)
+
+        AssertEqualLists(self, result, expected)
+    
+    def test_text_to_textnodes_unmatched(self):
+        text = "Here's some text with a `stray backtick."
+        with self.assertRaisesRegex(ValueError, r"Unmatched delimiter found\."):
+            text_to_textnodes(text)
 
 if (__name__ == "__main__"):
     unittest.main()
