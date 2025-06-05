@@ -97,7 +97,6 @@ def split_nodes_delimiter(old_nodes: list, delimiter: str, text_type: TextType) 
     
     return new_nodes
 
-
 def text_to_textnodes(text: str) -> list:
     if (text == ""):
         return []

@@ -157,6 +157,6 @@ class TestParentNode(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, r"Parent nodes must have children\."):
             node.to_html()
-    
+
 if (__name__ == "__main__"):
     unittest.main()

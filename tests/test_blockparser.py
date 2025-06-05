@@ -86,3 +86,6 @@ class TestBlockToBlockType(unittest.TestCase):
         expected = BlockType.PARAGRAPH
         result = block_to_blocktype(block)
         self.assertEqual(result, expected)
+
+if (__name__ == "__main__"):
+    unittest.main()
