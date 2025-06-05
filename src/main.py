@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 from .MDtoHTML import markdown_to_html_node
 
@@ -31,7 +32,7 @@ def extract_title(markdown: str) -> str:
     
     return title_line.lstrip("# ").strip()
 
-def generate_page(src: str, template: str, dest: str):
+def generate_page(src: str, template: str, dest: str, basepath: str = "/"):
     print(f"Generating page from {src} to {dest} using {template}")
 
     with open(src, "r") as src_file:
@@ -46,12 +47,12 @@ def generate_page(src: str, template: str, dest: str):
     
     html_content = markdown_to_html_node(markdown_content).to_html()
 
-    page_content = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
+    page_content = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html_content).replace("href=\"/", f"href=\"{basepath}").replace("src=\"/", f"src=\"{basepath}")
 
     with open(dest, "w") as dest_file:
         dest_file.write(page_content)
 
-def generate_pages_recursive(src: str, template: str, dest: str):
+def generate_pages_recursive(src: str, template: str, dest: str, basepath: str = "/"):
     if (not os.path.isdir(src)):
         raise ValueError(f"Source {src} is not a directory.")
     os.makedirs(dest, exist_ok=True)
@@ -62,12 +63,23 @@ def generate_pages_recursive(src: str, template: str, dest: str):
 
         if os.path.isfile(src_path):
             dest_path = dest_path.replace(".md", ".html")
-            generate_page(src_path, template, dest_path)
+            generate_page(src_path, template, dest_path, basepath)
         else:
-            generate_pages_recursive(src_path, template, dest_path)
+            generate_pages_recursive(src_path, template, dest_path, basepath)
 
 if (__name__ == "__main__"):
-    shutil.rmtree("public")
-    copy_tree("static", "public")
+    if (len(sys.argv) > 2):
+        print("Usage: python -m src.main [basepath]")
+        sys.exit(1)
+    
+    basepath = "/"
+    if (len(sys.argv) == 2):
+        basepath = sys.argv[1]
+    
+    build_dir = "docs"
 
-    generate_pages_recursive("content", "template.html", "public")
+    if os.path.exists(build_dir):
+        shutil.rmtree(build_dir)
+    copy_tree("static", build_dir)
+
+    generate_pages_recursive("content", "template.html", build_dir, basepath)
